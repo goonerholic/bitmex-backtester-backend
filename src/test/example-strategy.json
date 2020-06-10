@@ -1,0 +1,136 @@
+{
+  "name": "rsiStrategy",
+  "indicators": [
+    {
+      "input": {
+        "period": 23
+      },
+      "name": "rsi",
+      "indicator": "rsi"
+    },
+    {
+      "input": {
+        "fastPeriod": 20,
+        "slowPeriod": 56,
+        "signalPeriod": 30
+      },
+      "name": "macd",
+      "indicator": "macd"
+    },
+    {
+      "input": {
+        "period": 25
+      },
+      "name": "atr",
+      "indicator": "atr"
+    }
+  ],
+  "longEntry": [
+    {
+      "and": [
+        {
+          "crossover": {
+            "columnName": "rsi",
+            "target": 69
+          }
+        },
+        {
+          "lt": {
+            "columnName": "rsi",
+            "index": 0,
+            "target": 73
+          }
+        },
+        {
+          "lt": {
+            "columnName": "atr",
+            "index": 0,
+            "target": 30
+          }
+        },
+        {
+          "gt": {
+            "columnName": "macd:MACD",
+            "index": 0,
+            "target": 15
+          }
+        },
+        {
+          "gt": {
+            "columnName": "atr",
+            "index": 0,
+            "target": 20
+          }
+        }
+      ]
+    }
+  ],
+  "shortEntry": [
+    {
+      "and": [
+        {
+          "crossunder": {
+            "columnName": "rsi",
+            "target": 31
+          }
+        },
+        {
+          "gt": {
+            "columnName": "rsi",
+            "index": 0,
+            "target": 27
+          }
+        },
+        {
+          "lt": {
+            "columnName": "atr",
+            "index": 0,
+            "target": 30
+          }
+        },
+        {
+          "gt": {
+            "columnName": "atr",
+            "index": 0,
+            "target": 20
+          }
+        },
+        {
+          "lt": {
+            "columnName": "macd:MACD",
+            "index": 0,
+            "target": -15
+          }
+        }
+      ]
+    }
+  ],
+  "longExit": [
+    {
+      "crossunder": {
+        "columnName": "rsi",
+        "target": 31
+      }
+    }
+  ],
+  "shortExit": [
+    {
+      "crossover": {
+        "columnName": "rsi",
+        "target": 69
+      }
+    }
+  ],
+  "target": {
+    "fixed": {
+      "columnName": "atr",
+      "value": 3.2
+    }
+  },
+  "stop": {
+    "fixed": {
+      "columnName": "atr",
+      "value": 3.3
+    }
+  }
+}

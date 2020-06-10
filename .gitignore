@@ -1,0 +1,4 @@
+node_modules
+tradesTS.csv
+dist
+.env
