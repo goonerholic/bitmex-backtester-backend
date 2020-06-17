@@ -29,6 +29,6 @@
   "scripts": {
     "build": "tsc",
     "start:dev": "nodemon --watch src --exec ts-node src/index.ts",
-    "start": "tsc & node dist/index"
+    "start": "NODE_ENV=production tsc & node dist/index"
   }
 }
