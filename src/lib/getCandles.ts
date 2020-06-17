@@ -3,11 +3,13 @@ import qs from 'qs';
 import moment, { Moment } from 'moment-timezone';
 import CandleModel from '../models/candles';
 
+// get candles using BitMEX REST API
 export default async function getHistoricalData(
   symbol: string,
   timeframe: string,
   start: Date,
 ) {
+  // Get previous candle data saved on database
   const [prevCandle] = await CandleModel.find({ symbol })
     .sort({ timestamp: -1 })
     .limit(1);
