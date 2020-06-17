@@ -1,10 +1,10 @@
-import { CandleDataFrame, ICandle, StrategyIndicator } from '../types';
+import { CandleDataFrame, Candle, StrategyIndicator } from '../types';
 import { Indicators } from './indicators';
 
 export class DataFrame {
   _data: CandleDataFrame;
   indicators: Indicators;
-  constructor(data: ICandle[]) {
+  constructor(data: Candle[]) {
     this._data = {
       timestamp: [],
       open: [],

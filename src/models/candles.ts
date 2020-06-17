@@ -1,5 +1,5 @@
 import mongoose, { Model } from 'mongoose';
-import { ICandleSchema, ICandleModel } from '../types';
+import { CandleSchema, CandleModel } from '../types';
 
 const candleSchema = new mongoose.Schema({
   timestamp: { type: Date, required: true, unique: true },
@@ -35,7 +35,7 @@ candleSchema.statics.findBySymbol = function ({
     .lean();
 };
 
-const CandleModel = mongoose.model<ICandleSchema, ICandleModel>(
+const CandleModel = mongoose.model<CandleSchema, CandleModel>(
   'Candle',
   candleSchema,
 );

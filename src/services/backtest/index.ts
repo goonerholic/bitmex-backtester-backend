@@ -1,15 +1,21 @@
-import { Isymbol, StrategyInput, Trade, ConfigInput } from '../../types';
+import {
+  Symbol,
+  Strategy,
+  Trade,
+  TestConfig,
+  StrategyQuery,
+} from '../../types';
 import CandleModel from '../../models/candles';
 import { DataFrame } from '../../lib/dataFrame';
 import { Backtester } from '../../lib/backTester';
 import { conditionParser, safetyParser } from '../../lib/strategy';
 
 export async function runTest(
-  symbol: Isymbol,
+  symbol: Symbol,
   start: string,
   end: string,
-  strategy: StrategyInput,
-  config: ConfigInput,
+  strategy: StrategyQuery,
+  config: TestConfig,
 ) {
   const {
     indicators,
@@ -29,14 +35,9 @@ export async function runTest(
   const df = new DataFrame(candles);
   indicators.forEach((indicator) => df.addIndicator(indicator));
   df.trunc();
-  df.head(10);
-  df.tail(10);
-  //console.log(target, stop)
+  // df.head(10);
+  // df.tail(10);
 
-  // converter.json2csv([...df].map(candle => ({...candle, timestamp: new Date(candle.timestamp).toISOString(), history: 0})), (err, csv) => {
-  //   if (err) throw err
-  //   fs.writeFileSync('./ohlc.csv', csv)
-  // })
   const tick = symbol === 'XBTUSD' ? 0.5 : 0.05;
 
   const parsedStrategy = {

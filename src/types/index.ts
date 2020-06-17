@@ -1,54 +1,44 @@
 import mongoose, { Model } from 'mongoose';
 
-export type ICandle = {
-  [key: string]: string | number | Date;
+export type Candle = {
+  [key: string]: string | number | Date | History;
   symbol: string;
   timestamp: Date;
   open: number;
   high: number;
   low: number;
   close: number;
+  history: History;
 };
 
 // types for mongoose schema
-export type ICandleSchema = mongoose.Document & ICandle;
+export type CandleSchema = mongoose.Document & Candle;
 
-export type ICandleModel = Model<ICandleSchema> & {
+export type CandleModel = Model<CandleSchema> & {
   findBySymbol(input: {
     symbol: string;
     dataOnly: boolean;
     start: string;
     end: string;
-  }): Promise<ICandle[]>;
+  }): Promise<Candle[]>;
 };
 
 // types for Backtester class
-export type Isymbol = 'XBTUSD' | 'ETHUSD';
+export type Symbol = 'XBTUSD' | 'ETHUSD';
 export type TestConfig = {
   initialCap: number;
   leverage: number;
   amountType: 'fixed' | 'percent';
   amount: number;
-  slippage: number;
-  fee: boolean;
+  slippage?: number;
+  fee?: boolean;
   orderLimit: number;
   [key: string]: number | string | boolean | undefined;
 };
 
-export type ConfigInput = {
-  initialCap?: number;
-  leverage?: number;
-  amountType?: 'fixed' | 'percent';
-  amount?: number;
-  slippage?: number;
-  fee?: number;
-  orderLimit?: number;
-  [key: string]: number | string | undefined;
-};
-
-export type EntryConditions = 'Long Entry' | 'Short Entry';
-export type ExitConditions = 'Long Exit' | 'Short Exit';
-export type SafetyConditions = 'Target' | 'Stop';
+export type EntryCondition = 'Long Entry' | 'Short Entry';
+export type ExitCondition = 'Long Exit' | 'Short Exit';
+export type SafetyCondition = 'Target' | 'Stop';
 
 export type Strategy = {
   longEntry: (candle: Candle, or?: boolean) => boolean;
@@ -86,7 +76,7 @@ export type Position =
 export type Trade = {
   entryTime: string;
   exitTime: string;
-  type: ExitConditions | SafetyConditions;
+  type: ExitCondition | SafetyCondition;
   orderQty: number;
   entryPx: number;
   exitPx: number;
@@ -94,27 +84,17 @@ export type Trade = {
   result: 'Won' | 'Lost';
   balance: number;
   drawdown: number;
-  [key: string]: number | string | Date | Ihistory;
+  [key: string]: number | string | Date | History;
 };
 
 // types for DataFrame class
-export type Ihistory = ({
+export type History = ({
   count,
   columnName,
 }: {
   count: number;
   columnName: string;
 }) => number[];
-
-export type Candle = {
-  timestamp: Date;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  [key: string]: Date | number | Ihistory;
-  history: Ihistory;
-};
 
 export type CandleDataFrame = {
   timestamp: Date[];
@@ -144,60 +124,60 @@ export type MACDInput = {
 };
 
 // types for strategy query
-export type StrategyIndicator = BasicIndicator | MACDIndicator | BBIndicator;
+export type StrategyIndicator = Indicator | IndicatorMACD | IndicatorBB;
 
-type BasicIndicator = {
+type Indicator = {
   name: string;
   indicator: 'sma' | 'ema' | 'rsi' | 'atr';
   input: SimpleIndicatorInput;
 };
 
-type MACDIndicator = {
+type IndicatorMACD = {
   name: string;
   indicator: 'macd';
   input: MACDInput;
 };
 
-type BBIndicator = {
+type IndicatorBB = {
   name: string;
   indicator: 'bb';
   input: BBInput;
 };
 
-export type QueryInput = {
+export type Query = {
   columnName: string;
   index: number;
   target: number | string;
 };
 
-type SafetyQueryInput = {
+type SafetyQuery = {
   columnName?: string;
   value: number;
 };
 
-export type ConditionQuery = {
-  or?: ConditionQuery[];
-  crossover?: QueryInput;
-  crossunder?: QueryInput;
-  gt?: QueryInput;
-  gte?: QueryInput;
-  lt?: QueryInput;
-  lte?: QueryInput;
-  [key: string]: QueryInput | undefined | ConditionQuery[];
+export type Condition = {
+  or?: Condition[];
+  crossover?: Query;
+  crossunder?: Query;
+  gt?: Query;
+  gte?: Query;
+  lt?: Query;
+  lte?: Query;
+  [key: string]: Query | undefined | Condition[];
 };
 
-export type SafetyQuery = {
-  fixed?: SafetyQueryInput;
-  percent?: SafetyQueryInput;
+export type Safety = {
+  fixed?: SafetyQuery;
+  percent?: SafetyQuery;
 };
 
-export type StrategyInput = {
+export type StrategyQuery = {
   name: string;
   indicators: StrategyIndicator[];
-  longEntry: ConditionQuery[];
-  shortEntry: ConditionQuery[];
-  longExit: ConditionQuery[];
-  shortExit: ConditionQuery[];
-  target: SafetyQuery;
-  stop: SafetyQuery;
+  longEntry: Condition[];
+  shortEntry: Condition[];
+  longExit: Condition[];
+  shortExit: Condition[];
+  target: Safety;
+  stop: Safety;
 };

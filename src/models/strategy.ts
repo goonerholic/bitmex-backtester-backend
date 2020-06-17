@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { StrategyInput } from '../types';
+import { StrategyQuery } from '../types';
 
 const indicatorInputSchema = new mongoose.Schema(
   {
@@ -80,7 +80,7 @@ const strategySchema = new mongoose.Schema({
   stop: safetyQuerySchema,
 });
 
-type StrategySchema = StrategyInput & mongoose.Document;
+type StrategySchema = StrategyQuery & mongoose.Document;
 
 const StrategyModel = mongoose.model<StrategySchema>(
   'Strategy',

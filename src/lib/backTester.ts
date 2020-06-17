@@ -4,10 +4,9 @@ import {
   Trade,
   Strategy,
   Position,
-  ConfigInput,
-  ExitConditions,
-  SafetyConditions,
-  Isymbol,
+  ExitCondition,
+  SafetyCondition,
+  Symbol,
 } from '../types';
 import { Indicators } from './indicators';
 
@@ -18,14 +17,14 @@ export class Backtester {
   _trades: Trade[];
   _balance: number;
   _strategy: Strategy;
-  _symbol: Isymbol;
+  _symbol: Symbol;
   indicators!: Indicators;
   constructor({
     symbol,
     data,
     strategy,
   }: {
-    symbol: Isymbol;
+    symbol: Symbol;
     data: DataFrame;
     strategy: Strategy;
   }) {
@@ -59,10 +58,8 @@ export class Backtester {
    * Set backtester config
    * @param configInput
    */
-  public setConfig(configInput: ConfigInput): void {
-    for (const key in configInput) {
-      this._config[key] = configInput[key];
-    }
+  public setConfig(configInput: TestConfig): void {
+    this._config = { ...this._config, ...configInput };
     this._balance = this._config.initialCap;
   }
 
@@ -75,7 +72,7 @@ export class Backtester {
   private _exitPosition(
     timestamp: Date,
     exitPx: number,
-    type: 'Long Exit' | 'Short Exit' | 'Target' | 'Stop',
+    type: ExitCondition | SafetyCondition,
   ): void {
     if (!this._position.isOpen) return; //exit when no open position
     const {
@@ -85,7 +82,7 @@ export class Backtester {
       targetPx,
       stopPx,
     } = this._position; //get current position informations
-    const { slippage } = this._config;
+    const slippage = this._config.slippage || 0;
 
     const coeff = currentQty > 0 ? 1 : -1;
     // entry, exit price after slippage applied
@@ -195,10 +192,11 @@ export class Backtester {
     entryPx: number,
     exitPx: number,
   ): number {
-    if (symbol === 'XBTUSD') {
-      return qty * (1 / entryPx - 1 / exitPx);
-    } else {
-      return (exitPx - entryPx) * 0.000001 * qty;
+    switch (symbol) {
+      case 'XBTUSD':
+        return qty * (1 / entryPx - 1 / exitPx);
+      case 'ETHUSD':
+        return (exitPx - entryPx) * 0.000001 * qty;
     }
   }
 
@@ -229,11 +227,21 @@ export class Backtester {
     return;
   }
 
+  private _getQuantity(symbol: Symbol, entryPx: number) {
+    const { amountType, amount, leverage } = this._config;
+    if (amountType === 'fixed') return amount;
+    switch (symbol) {
+      case 'XBTUSD':
+        return Math.floor(entryPx * this._balance * amount * leverage);
+      case 'ETHUSD':
+        return (this._balance * amount * leverage * 1000000) / entryPx;
+    }
+  }
+
   /**
    * run test
    */
   public run(): Trade[] {
-    const { leverage, amount, amountType } = this._config;
     const {
       longEntry,
       shortEntry,
@@ -242,14 +250,13 @@ export class Backtester {
       target,
       stop,
     } = this._strategy;
-    //console.log(target, stop)
     for (const candle of this._data) {
       const { timestamp, high, low, close } = candle;
       if (this._position.isOpen) {
         const { currentQty, targetPx, stopPx } = this._position;
         const safetyCondition =
           target || stop ? this._checkSafety(high, low) : undefined;
-        let exitCondition: ExitConditions | SafetyConditions | undefined;
+        let exitCondition: ExitCondition | SafetyCondition | undefined;
         let exitPx;
         if (safetyCondition) {
           exitCondition = safetyCondition;
@@ -263,9 +270,6 @@ export class Backtester {
         }
         if (exitCondition && exitPx) {
           this._exitPosition(timestamp, exitPx, exitCondition);
-        } else {
-          this._position.highs.push(high);
-          this._position.lows.push(low);
         }
       }
 
@@ -275,28 +279,17 @@ export class Backtester {
           : shortEntry(candle)
           ? 'Short Entry'
           : undefined;
-        if (entryCondition) {
-          const coeff = entryCondition === 'Long Entry' ? 1 : -1;
-          const entryPx = close;
-          let qty = amountType === 'fixed' ? amount : undefined;
-          if (this._symbol === 'XBTUSD') {
-            qty = Math.floor(entryPx * this._balance * amount * leverage);
-          } else {
-            qty = Math.floor(
-              (this._balance * amount * leverage * 1000000) / entryPx,
-            );
-          }
-
-          if (this._config.orderLimit) {
-            qty =
-              qty > this._config.orderLimit
-                ? coeff * this._config.orderLimit
-                : coeff * qty;
-          }
-          const targetPx = target ? target(entryPx, coeff, candle) : undefined;
-          const stopPx = stop ? stop(entryPx, coeff, candle) : undefined;
-          this._enterPosition(timestamp, qty, entryPx, targetPx, stopPx);
-        }
+        if (!entryCondition) continue;
+        const coeff = entryCondition === 'Long Entry' ? 1 : -1;
+        const entryPx = close;
+        const qty =
+          Math.min(
+            this._getQuantity(this._symbol, entryPx),
+            this._config.orderLimit,
+          ) * coeff;
+        const targetPx = target ? target(entryPx, coeff, candle) : undefined;
+        const stopPx = stop ? stop(entryPx, coeff, candle) : undefined;
+        this._enterPosition(timestamp, qty, entryPx, targetPx, stopPx);
       }
     }
 

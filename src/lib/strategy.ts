@@ -1,7 +1,7 @@
-import { Candle, ConditionQuery, SafetyQuery, QueryInput } from '../types';
+import { Candle, Condition, Safety, Query } from '../types';
 
 export function safetyParser(
-  query: SafetyQuery,
+  query: Safety,
   type: 'target' | 'stop',
   tick: number,
 ) {
@@ -13,11 +13,6 @@ export function safetyParser(
   ): number | undefined {
     if (query.fixed) {
       const { columnName, value } = query.fixed;
-      // if (columnName && !candle[columnName]) {
-      //   throw new Error(
-      //     `Unabled to parse the query. Column name ${columnName} doesn't exist.`,
-      //   )
-      // }
       const ref = columnName ? candle[columnName] : 1;
       const offset = coeff * side * (typeof ref === 'number' ? ref : 1) * value;
       return entryPx + Math.floor(offset / tick) * tick;
@@ -29,9 +24,9 @@ export function safetyParser(
   };
 }
 
-export function conditionParser(query: ConditionQuery[]) {
+export function conditionParser(query: Condition[]) {
   return function (data: Candle, or = false): boolean {
-    return query.reduce((acc: boolean, curr: ConditionQuery) => {
+    return query.reduce((acc: boolean, curr: Condition) => {
       //console.log(query)
       const [key] = Object.keys(curr);
       const [value] = Object.values(curr);
@@ -41,19 +36,19 @@ export function conditionParser(query: ConditionQuery[]) {
       //console.log(value)
       if (key === 'or') {
         // if ('length' in value) {
-        return acc && conditionParser(value as ConditionQuery[])(data, true);
+        return acc && conditionParser(value as Condition[])(data, true);
       } else if (key === 'and') {
-        return acc && conditionParser(value as ConditionQuery[])(data, false);
+        return acc && conditionParser(value as Condition[])(data, false);
       } else {
         return or
-          ? acc || queryParser(key, value as QueryInput, data)
-          : acc && queryParser(key, value as QueryInput, data);
+          ? acc || queryParser(key, value as Query, data)
+          : acc && queryParser(key, value as Query, data);
       }
     }, true);
   };
 }
 
-function queryParser(key: string, query: QueryInput, data: Candle) {
+function queryParser(key: string, query: Query, data: Candle) {
   const { columnName, index, target } = query;
   if (!data[columnName]) return false;
   if (index && !data.history({ count: index, columnName })[index]) return false;
