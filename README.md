@@ -34,7 +34,7 @@ const indicatorOption = {
 
 dataFrame.addIndicator(indicatorOption)
 ```
-- strategy query should looks like this
+- strategy query should look like this
 ```
 const myStrategy  = {
   name: 'my-strategy'
