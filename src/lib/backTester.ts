@@ -87,7 +87,8 @@ export class Backtester {
     const coeff = currentQty > 0 ? 1 : -1;
     // entry, exit price after slippage applied
     const entryPxAfterSlippage =
-      avgEntryPx + (Math.random() > 0.8 ? -coeff : coeff) * slippage;
+      // avgEntryPx + (Math.random() > 0.8 ? coeff : -coeff) * slippage;
+      avgEntryPx + coeff * slippage;
     const exitPxAfterSlippage =
       exitPx - (type !== 'Target' ? coeff * slippage : 0);
 
@@ -99,17 +100,19 @@ export class Backtester {
         case 'XBTUSD':
           fee =
             (Math.abs(currentQty) / avgEntryPx) * 0.00075 +
-            (type !== 'Target'
-              ? (Math.abs(currentQty) / exitPxAfterSlippage) * 0.00075
-              : (-Math.abs(currentQty) / exitPxAfterSlippage) * 0.00025);
+            (type === 'Target'
+              ? (-Math.abs(currentQty) / exitPxAfterSlippage) * 0.00025
+              : (Math.abs(currentQty) / exitPxAfterSlippage) * 0.00075);
           break;
         case 'ETHUSD':
           fee =
             Math.abs((currentQty * avgEntryPx) / 1000000) * 0.00075 +
-            (type !== 'Target'
-              ? Math.abs((currentQty * exitPxAfterSlippage) / 1000000) * 0.00075
-              : -Math.abs((currentQty * exitPxAfterSlippage) / 1000000) *
-                0.00025);
+            (type === 'Target'
+              ? -Math.abs((currentQty * exitPxAfterSlippage) / 1000000) *
+                0.00025
+              : Math.abs((currentQty * exitPxAfterSlippage) / 1000000) *
+                0.00075);
+
           break;
       }
     }

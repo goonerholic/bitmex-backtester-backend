@@ -7,7 +7,11 @@ export async function saveStrategy(
   res: express.Response,
 ) {
   try {
-    console.log(req.body);
+    const { name } = req.body;
+    const exist = await StrategyModel.findOne({ name });
+    if (exist) {
+      res.status(409).send('Strategy name already exists.');
+    }
     const result = await StrategyModel.create(req.body);
     res.status(200).send(result);
   } catch (e) {
